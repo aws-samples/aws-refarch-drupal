@@ -1,0 +1,490 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Reference Architecture to host Drupal on AWS - Creates Drupal web Auto Scaling group
+
+Metadata:
+
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Web Parameters
+      Parameters:
+        - KeyName
+        - WebInstanceType
+        - WebAsgMax
+        - WebAsgMin
+        - WebSecurityGroup
+        - WebSubnet0
+        - WebSubnet1
+        - WebSubnet2
+        - PublicAlbTargetGroupArn
+        - PublicAlbHostname
+        - SslCertificate
+    - Label:
+        default: Drupal Parameters
+      Parameters:
+        - Title
+        - DomainName
+        - Directory
+        - AdminUsername
+        - AdminPassword
+        - AdminEmail
+        - Locale
+    - Label:
+        default: Database Parameters
+      Parameters:
+        - DatabaseClusterEndpointAddress
+        - DatabaseName
+        - DatabaseMasterUsername
+        - DatabaseMasterPassword
+    - Label:
+        default: File System Parameters
+      Parameters:
+        - ElasticFileSystem
+    ParameterLabels:
+      DatabaseClusterEndpointAddress:
+        default: DB Cluster Endpoint Address
+      DatabaseMasterUsername:
+        default: DB Master Username  
+      DatabaseMasterPassword:
+        default: DB Master Password
+      DatabaseName:
+        default: DB Name
+      ElasticFileSystem:
+        default: EFS File System
+      KeyName:
+        default: Existing Key Pair
+      PublicAlbTargetGroupArn:
+        default: Public Alb Target Group Arn
+      PublicAlbHostname:
+        default: Public Alb Hostname
+      SslCertificate:
+        default: ACM Cert attached to Public Alb
+      WebAsgMax:
+        default: Web ASG Max
+      WebAsgMin:
+        default: Web ASG Min
+      WebInstanceType:
+        default: Web Instance Type
+      WebSecurityGroup:
+        default: Web Security Group
+      WebSubnet0:
+        default: Web Subnet for AZ 0
+      WebSubnet1:
+        default: Web Subnet for AZ 1
+      WebSubnet2:
+        default: Web Subnet for AZ 2
+      AdminEmail:
+        default: Admin Email
+      AdminPassword:
+        default: Admin Password
+      AdminUsername:
+        default: Admin Username
+      Directory:
+        default: Site Directory
+      DomainName:
+        default: Site Domain
+      Locale:
+        default: Language Code
+      Title:
+        default: Site Title
+
+Parameters:
+
+  DatabaseClusterEndpointAddress:
+    Description: The RDS cluster endpoint address.
+    Type: String
+  DatabaseMasterUsername:
+    AllowedPattern: ^([a-zA-Z0-9]*)$
+    Description: The Amazon RDS master username.
+    ConstraintDescription: Must contain only alphanumeric characters and be at least 8 characters.
+    MaxLength: 16
+    MinLength: 1
+    Type: String
+  DatabaseMasterPassword:
+    AllowedPattern: ^([a-z0-9A-Z`~!#$%^&*()_+,\\-])*$
+    ConstraintDescription: Must be letters (upper or lower), numbers, and these special characters '_'`~!#$%^&*()_+,-
+    Description: The Amazon RDS master password.
+    MaxLength: 41
+    MinLength: 8
+    NoEcho: true
+    Type: String
+  DatabaseName:
+    AllowedPattern: ^([a-zA-Z0-9]*)$
+    Description: The Amazon RDS master database name.
+    Type: String
+  ElasticFileSystem:
+    AllowedPattern: ^(fs-)([a-z0-9]{8})$
+    Description: The Amazon EFS file system id.
+    Type: String
+  KeyName:
+    AllowedPattern: ^([a-zA-Z0-9 @.`~!#$%^&*()_+,\\-])*$
+    ConstraintDescription: Must be letters (upper or lower), numbers, and special characters.
+    Description: Name of an EC2 KeyPair. Your bastion & Web instances will launch with this KeyPair.
+    Type: AWS::EC2::KeyPair::KeyName
+  PublicAlbTargetGroupArn:
+    Description: The public application load balancer target group arn.
+    Type: String
+  PublicAlbHostname:
+    Description: The hostname of the public ALB http form (e.g. http://abdc-12345-xyz.<region>.elb.amazonaws.com)
+    Type: String
+  SslCertificate:
+    AllowedValues:
+      - True
+      - False
+    Default: False
+    Description: Is there an ACM SSL Certificate attached to the Public Alb?
+    Type:
+      String
+  WebAsgMax:
+    AllowedPattern: ^((?!0$)[1-2]?[0-9]|30)$
+    ConstraintDescription: Must be a number between 1 and 30.
+    Default: 4
+    Description: Specifies the maximum number of EC2 instances in the Web Autoscaling Group.
+    Type: String
+  WebAsgMin:
+    AllowedPattern: ^([0-0]?[0-9]|10)$
+    ConstraintDescription: Must be a number between 0 and 10.
+    Default: 2
+    Description: Specifies the minimum number of EC2 instances in the Web Autoscaling Group.
+    Type: String
+  WebInstanceType:
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+    ConstraintDescription: Must be a valid Amazon EC2 instance type.
+    Default: t2.large
+    Description: The Amazon EC2 instance type for your web instances.
+    Type: String
+  WebSecurityGroup:
+    Description: Select the web security group.
+    Type: AWS::EC2::SecurityGroup::Id
+  WebSubnet0:
+    Description: Select an existing web subnet for AZ 0.
+    Type: AWS::EC2::Subnet::Id
+  WebSubnet1:
+    Description: Select an existing web subnet for AZ 1.
+    Type: AWS::EC2::Subnet::Id 
+  WebSubnet2:
+    Description: Select an existing web subnet for AZ 2.
+    Type: AWS::EC2::Subnet::Id
+  AdminEmail:
+    AllowedPattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
+    Description: The Drupal admin email address.
+    Type: String
+  AdminPassword:
+    AllowedPattern: ^([a-zA-Z0-9`~!#$%^&*()_+,\\-])*$
+    ConstraintDescription: Must be letters (upper or lower), numbers, and these special characters '_'`~!#$%^&*()_+,-   
+    Description: The Drupal admin password.
+    Type: String
+    NoEcho: true
+  AdminUsername:
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9_-])*([a-zA-Z0-9])$
+    Description: The Drupal admin username.
+    Type: String
+  Directory:
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9_-])*([a-zA-Z0-9])$
+    Description: The Drupal site directory.
+    Type: String
+  DomainName:
+    AllowedPattern: ^$|(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$
+    Description: '[ Optional ] The main domain name of the Drupal site (e.g. example.com). Leave empty to use the ALB DNS name for the Drupal site.'
+    Type: String
+  Locale:
+    Description: The main language of the Drupal site, as per https://codex.Drupal.org/Installing_Drupal_in_Your_Language. The default is 'en_GB'.
+    Type: String
+    Default: en_GB
+  Title:
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
+    Description: The Drupal website title.
+    Type: String
+
+Conditions:
+
+  NoSslCertificate:
+    !Equals [ False, !Ref SslCertificate ]
+  MoreThan2AZ:
+    !Or [
+      !Equals [ !Ref 'AWS::Region', us-east-1 ],
+      !Equals [ !Ref 'AWS::Region', us-east-2 ],
+      !Equals [ !Ref 'AWS::Region', us-west-2 ],
+      !Equals [ !Ref 'AWS::Region', eu-west-1 ],
+      !Equals [ !Ref 'AWS::Region', sa-east-1 ],
+      !Equals [ !Ref 'AWS::Region', ap-northeast-1 ],
+      !Equals [ !Ref 'AWS::Region', ap-southeast-2 ]
+    ]
+  NoDomainName:
+    !Equals [ '', !Ref DomainName ]
+
+Mappings:
+
+  RegionMap:
+    ap-northeast-1:
+      AMI: ami-56d4ad31
+    ap-northeast-2:
+      AMI: ami-dac312b4
+    ap-south-1:
+      AMI: ami-f9daac96
+    ap-southeast-1:
+      AMI: ami-dc9339bf
+    ap-southeast-2:
+      AMI: ami-1c47407f
+    ca-central-1:
+      AMI: ami-ebed508f
+    eu-central-1:
+      AMI: ami-af0fc0c0
+    eu-west-1:
+      AMI: ami-70edb016
+    eu-west-2:
+      AMI: ami-f1949e95
+    sa-east-1:
+      AMI: ami-80086dec
+    us-east-1:
+      AMI: ami-0b33d91d
+    us-east-2:
+      AMI: ami-c55673a0
+    us-west-1:
+      AMI: ami-165a0876
+    us-west-2:
+      AMI: ami-f173cc91
+
+Resources:
+
+  WebInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - !Ref WebInstanceRole
+  WebInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: logs
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - logs:DescribeLogStreams
+            Resource:
+            - arn:aws:logs:*:*:*
+  WebAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      Cooldown: 60
+      HealthCheckGracePeriod: 120
+      HealthCheckType: EC2
+      LaunchConfigurationName: !Ref WebLaunchConfiguration
+      MaxSize: !Ref WebAsgMax
+      MinSize: !Ref WebAsgMin
+      Tags:
+        - Key: Name
+          Value: !Join [ '', [ 'Web ASG / ', !Ref 'AWS::StackName' ] ]
+          PropagateAtLaunch: true
+      TargetGroupARNs:
+        - !Ref PublicAlbTargetGroupArn
+      VPCZoneIdentifier:
+        !If [
+          MoreThan2AZ,
+          [ !Ref WebSubnet0, !Ref WebSubnet1, !Ref WebSubnet2 ],
+          [ !Ref WebSubnet0, !Ref WebSubnet1 ]
+        ]
+    CreationPolicy:
+      ResourceSignal:
+        Count: 0
+        Timeout: PT5M
+  WebLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          deploy_webserver:
+            - install_webserver
+            - build_cacheclient
+            - build_drupal
+            - build_opcache
+            - install_cacheclient
+            - install_drupal
+            - install_opcache
+            - start_webserver
+        install_webserver:
+          packages:
+            yum:
+              awslogs: []
+              httpd24: []
+              mysql56: []
+              php70: []
+              php70-mysqlnd: []
+              php70-gd: []
+          files:
+            /tmp/create_site_conf.sh:
+              content:
+                !Join [
+                  "",[
+                    "#!/bin/bash -xe\n",
+                    "if [ ! -f /etc/httpd/conf.d/", !Ref Directory, ".conf ]; then\n",                    
+                    "   touch /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo 'ServerName 127.0.0.1:80' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo 'DocumentRoot /var/www/drupal/", !Ref Directory, "' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo '<Directory /var/www/drupal/", !Ref Directory, ">' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo '  Options Indexes FollowSymLinks' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo '  AllowOverride All' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo '  Require all granted' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo '</Directory>' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "fi\n"
+                  ]
+                ]
+              mode: 000500
+              owner: root
+              group: root
+          commands:
+            create_site_conf:
+              command: ./create_site_conf.sh
+              cwd: /tmp
+              ignoreErrors: false
+        build_cacheclient:
+          packages:
+            yum:
+              gcc-c++: []  
+          files:
+            /tmp/install_cacheclient.sh:
+              content:
+                !Sub |
+                  #!/bin/bash -xe
+                  aws s3 cp 's3://aws-us-east-1/reference-architecture/drupal/latest/bits/AmazonElastiCacheClusterClient-2.0.1-PHP70-64bit.tar.gz' /tmp/.
+                  tar -xf '/tmp/AmazonElastiCacheClusterClient-2.0.1-PHP70-64bit.tar.gz'
+                  cp '/tmp/artifact/amazon-elasticache-cluster-client.so' /usr/lib64/php/7.0/modules/
+                  if [ ! -f /etc/php-7.0.d/50-memcached.ini ]; then
+                      touch /etc/php-7.0.d/50-memcached.ini
+                  fi
+                  sed -i '3i extension=/usr/lib64/php/7.0/modules/amazon-elasticache-cluster-client.so;' /etc/php-7.0.d/50-memcached.ini
+                  sed -i '3i extension=igbinary.so;' /etc/php-7.0.d/50-memcached.ini
+              mode: 000500
+              owner: root
+              group: root
+        build_opcache:
+          packages:
+            yum:
+              php70-opcache: []
+          files:
+            /tmp/install_opcache.sh:
+              content:
+                !Sub |
+                  #!/bin/bash -xe
+                  # create hidden opcache directory locally & change owner to apache
+                  if [ ! -d /var/www/.opcache ]; then                    
+                      mkdir -p /var/www/.opcache
+                  fi
+                  # enable opcache in /etc/php-7.0.d/10-opcache.ini
+                  sed -i 's/;opcache.file_cache=.*/opcache.file_cache=\/var\/www\/.opcache/' /etc/php-7.0.d/10-opcache.ini
+                  # download opcache-instance.php to verify opcache status
+                  if [ ! -f /var/www/drupal/${Directory}/opcache-instanceid.php ]; then
+                      aws s3 cp 's3://aws-us-east-1/reference-architecture/drupal/latest/bits/opcache-instanceid.php' /var/www/drupal/${Directory}/.
+                  fi
+              mode: 000500
+              owner: root
+              group: root
+        build_drupal:
+          files:
+            /tmp/install_drupal.sh:
+              content:
+                !Join [
+                  "",[
+                    "#!/bin/bash -xe\n",
+                    "\n",
+                    "# make site directory\n",
+                    "if [ ! -d /var/www/drupal/", !Ref Directory, " ]; then\n",                    
+                    "   mkdir -p /var/www/drupal/", !Ref Directory, "\n",
+                    "\n",
+                    "   cd /tmp\n",
+                    "   wget http://ftp.drupal.org/files/projects/drupal-8.3.2.tar.gz\n",
+                    "   cd /var/www/drupal/", !Ref Directory, "\n",
+                    "   tar --strip-components=1 -xvzf /tmp/drupal-8.3.2.tar.gz\n",
+                    "   # set permissions of drupal site directories\n", 
+                    "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "\n",
+                    "   if [ ! -f /var/www/drupal/", !Ref Directory, "/opcache-instanceid.php ]; then\n",
+                    "     aws s3 cp 's3://aws-us-east-1/reference-architecture/wordpress/latest/bits/opcache-instanceid.php' /var/www/drupal/", !Ref Directory, "/.\n",
+                    "   fi\n",
+                    "fi\n"
+                  ]
+                ]
+              mode: 000500
+              owner: root
+              group: root
+        install_drupal:
+          commands:
+            install_drupal:
+              command: ./install_drupal.sh
+              cwd: /tmp
+              ignoreErrors: false          
+        install_cacheclient:
+          commands:
+            install_cacheclient:
+              command: ./install_cacheclient.sh
+              cwd: /tmp
+              ignoreErrors: false
+        install_opcache:
+          commands:
+            install_opcache:
+              command: ./install_opcache.sh
+              cwd: /tmp
+              ignoreErrors: false
+        start_webserver:
+          services:
+            sysvinit:
+              httpd:
+                enabled: true
+                ensureRunning: true
+    Properties:
+      IamInstanceProfile: !Ref WebInstanceProfile
+      ImageId: !FindInMap [ RegionMap, !Ref 'AWS::Region', AMI ]
+      InstanceMonitoring: true
+      InstanceType: !Ref WebInstanceType
+      KeyName: !Ref KeyName
+      SecurityGroups:
+      - !Ref WebSecurityGroup
+      UserData:
+        "Fn::Base64":
+          !Sub |
+            #!/bin/bash -xe
+            yum update -y
+            mkdir -p /var/www/drupal
+            mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 ${ElasticFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /var/www/drupal
+            /opt/aws/bin/cfn-init --configsets deploy_webserver --verbose --stack ${AWS::StackName} --resource WebLaunchConfiguration --region ${AWS::Region}
+            /opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource WebAutoScalingGroup --region ${AWS::Region}
+
+Outputs:
+
+  Opcachestatus:
+    Value: !Join [ '', [ !Ref PublicAlbHostname, '/opcache-instanceid.php' ] ]
