@@ -322,8 +322,8 @@ Resources:
         ]
     CreationPolicy:
       ResourceSignal:
-        Count: 1
-        Timeout: PT15M
+        Count: 0
+        Timeout: PT20M
   WebLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Metadata:
