@@ -6,7 +6,7 @@ You can launch this CloudFormation stack, using your account, in the following A
 
 | AWS Region Code | Name | Launch |
 | --- | --- | --- 
-| us-east-1 |US East (N. Virginia)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](<a href= "https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml" target="_blank" >) |
+| us-east-1 |US East (N. Virginia)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
 | us-east-2 |US East (Ohio)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
 | us-west-2 |US West (Oregon)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
 | eu-west-1 |EU (Ireland)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
