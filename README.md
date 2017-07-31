@@ -40,23 +40,33 @@ AWS Certificate Manager (ACM) is a service that lets you easily provision, manag
 
 There are two output URLs for the master template. The SiteURL will take you to your new Drupal site installation wizard. It will be the site domain name if you provided one, the CloudFront URL if you chose to create a CloudFront distribution, or the domain name of the public application load balancer.  The second output URL will take you to the OpCache Status page for each EC2 instance in the AutoScaling group. By refreshing the page you will be able to verify OpCache has been enabled on each instance.
 
-Before starting the installation wizard, verify that the OpCache status page is available for all EC2 instances in the AutoScaling group by clicking on the OpCacheValidationURL link of the master template's Output tab. Refresh this page a few times to verify that the EC2 instance id changes.
+Before starting the installation wizard, verify that the OpCache status page is available for all EC2 instances in the AutoScaling group by clicking on the ***OpCacheValidationURL*** link of the master template's ***Output*** tab. Refresh this page a few times to verify that the EC2 instance id changes.
 
 To start the installation wizard, click on the SiteURL link of the master template's Output tab.
 
-Select the appropriate language and click Save and continue.
+Select the appropriate language and click ***Save and continue***.
 ![Choose Language](images/aws-refarch-drupal_wizard_language.png)
 
-Select your desired installation profile and click Save and continue.
+
+
+Select your desired installation profile and click ***Save and continue***.
 ![Installation Profile](images/aws-refarch-drupal_wizard_profile.png)
 
-Enter your database configuration. Enter the Database name, Database username, and Database password you entered as parameters of the CloudFormation master template. Select ADVANCED OPTIONS and enter the DatabaseClusterEndpointAddress of the RDS cluster created with this stack.  This can be found in the CloudFormation Stack window by selecting the RDS statck that was just created and selecting the Output tab. Click Save and continue.
+
+
+Enter your database configuration. Enter the Database name, Database username, and Database password you entered as parameters of the CloudFormation master template. Select ***ADVANCED OPTIONS*** and enter the ***DatabaseClusterEndpointAddress*** of the RDS cluster created with this stack.  This can be found in the CloudFormation Stack window by selecting the RDS statck that was just created and selecting the ***Output*** tab. Click ***Save and continue***.
 ![Database Configuration](images/aws-refarch-drupal_wizard_database.png)
+
+
+
 
 The installation wizard will install the site.
 ![Site Installation](images/aws-refarch-drupal_wizard_installing.png)
 
-After the site has been installed, enter the site information and click Save and continue. 
+
+
+
+After the site has been installed, enter the site information and click ***Save and continue***. 
 ![Site Configuration](images/aws-refarch-drupal_wizard_configsite.png)
 
 
