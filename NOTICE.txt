@@ -17,7 +17,7 @@ THIRD PARTY COMPONENTS
 *********************
 This software includes third party software subject to the following copyrights:
 
-    WordPress is licensed under the General Public License (GPLv2 or later) from the Free Software Foundation.
+    Drupal is licensed under the GNU General Public License (GPLv2 or later).
 
     OpCache is licensed under PHP License, version 3.01.
 

@@ -237,33 +237,33 @@ Mappings:
 
   RegionMap:
     ap-northeast-1:
-      AMI: ami-56d4ad31
+      AMI: ami-3bd3c45c
     ap-northeast-2:
-      AMI: ami-dac312b4
+      AMI: ami-e21cc38c
     ap-south-1:
-      AMI: ami-f9daac96
+      AMI: ami-47205e28
     ap-southeast-1:
-      AMI: ami-dc9339bf
+      AMI: ami-77af2014
     ap-southeast-2:
-      AMI: ami-1c47407f
+      AMI: ami-10918173
     ca-central-1:
-      AMI: ami-ebed508f
+      AMI: ami-a7aa15c3
     eu-central-1:
-      AMI: ami-af0fc0c0
+      AMI: ami-82be18ed
     eu-west-1:
-      AMI: ami-70edb016
+      AMI: ami-d7b9a2b1
     eu-west-2:
-      AMI: ami-f1949e95
+      AMI: ami-ed100689
     sa-east-1:
-      AMI: ami-80086dec
+      AMI: ami-87dab1eb
     us-east-1:
-      AMI: ami-0b33d91d
+      AMI: ami-a4c7edb2
     us-east-2:
-      AMI: ami-c55673a0
+      AMI: ami-8a7859ef
     us-west-1:
-      AMI: ami-165a0876
+      AMI: ami-327f5352
     us-west-2:
-      AMI: ami-f173cc91
+      AMI: ami-6df1e514
 
 Resources:
 
@@ -322,8 +322,8 @@ Resources:
         ]
     CreationPolicy:
       ResourceSignal:
-        Count: 0
-        Timeout: PT5M
+        Count: 1
+        Timeout: PT15M
   WebLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Metadata:
@@ -408,6 +408,7 @@ Resources:
                   fi
                   # enable opcache in /etc/php-7.0.d/10-opcache.ini
                   sed -i 's/;opcache.file_cache=.*/opcache.file_cache=\/var\/www\/.opcache/' /etc/php-7.0.d/10-opcache.ini
+                  sed -i 's/opcache.memory_consumption=.*/opcache.memory_consumption=512/' /etc/php-7.0.d/10-opcache.ini
                   # download opcache-instance.php to verify opcache status
                   if [ ! -f /var/www/drupal/${Directory}/opcache-instanceid.php ]; then
                       aws s3 cp 's3://aws-us-east-1/reference-architecture/drupal/latest/bits/opcache-instanceid.php' /var/www/drupal/${Directory}/.
@@ -428,9 +429,9 @@ Resources:
                     "   mkdir -p /var/www/drupal/", !Ref Directory, "\n",
                     "\n",
                     "   cd /tmp\n",
-                    "   wget http://ftp.drupal.org/files/projects/drupal-8.3.2.tar.gz\n",
+                    "   wget http://ftp.drupal.org/files/projects/drupal-8.3.5.tar.gz\n",
                     "   cd /var/www/drupal/", !Ref Directory, "\n",
-                    "   tar --strip-components=1 -xvzf /tmp/drupal-8.3.2.tar.gz\n",
+                    "   tar --strip-components=1 -xvzf /tmp/drupal-8.3.5.tar.gz\n",
                     "   # set permissions of drupal site directories\n", 
                     "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "\n",
                     "   if [ ! -f /var/www/drupal/", !Ref Directory, "/opcache-instanceid.php ]; then\n",
@@ -466,6 +467,10 @@ Resources:
               httpd:
                 enabled: true
                 ensureRunning: true
+          commands:
+            start_webserver:
+              command: service httpd restart
+              ignoreErrors: false
     Properties:
       IamInstanceProfile: !Ref WebInstanceProfile
       ImageId: !FindInMap [ RegionMap, !Ref 'AWS::Region', AMI ]
@@ -482,7 +487,9 @@ Resources:
             mkdir -p /var/www/drupal
             mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 ${ElasticFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /var/www/drupal
             /opt/aws/bin/cfn-init --configsets deploy_webserver --verbose --stack ${AWS::StackName} --resource WebLaunchConfiguration --region ${AWS::Region}
+            sleep 600
             /opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource WebAutoScalingGroup --region ${AWS::Region}
+            service httpd restart
 
 Outputs:
 

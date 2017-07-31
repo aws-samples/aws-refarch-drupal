@@ -286,7 +286,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.PublicSubnet1 ]
         PublicSubnet2:
           !GetAtt [ newvpc, Outputs.PublicSubnet2 ]
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-03-bastion.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-03-bastion.yaml
   cloudfront:
     Condition: AvailableAWSRegion
     Condition: DeployCloudFront
@@ -300,7 +300,7 @@ Resources:
           !GetAtt [ publicalb, Outputs.PublicAlbDnsName ]
         DomainName:
           !Ref DomainName
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-04-cloudfront.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-04-cloudfront.yaml
   efs:
     Condition: AvailableAWSRegion
     DependsOn: [ newvpc, securitygroups ]
@@ -315,7 +315,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet1 ]
         DataSubnet2:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-03-efs.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-03-efs.yaml
   elasticache:
     Condition: AvailableAWSRegion
     Condition: DeployElastiCache
@@ -335,11 +335,11 @@ Resources:
           !Ref ElastiCacheNodeType
         ElastiCacheSecurityGroup:
           !GetAtt [ securitygroups, Outputs.ElastiCacheSecurityGroup ]
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-03-elasticache.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-03-elasticache.yaml
   newvpc:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-01-newvpc.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-01-newvpc.yaml
   publicalb:
     Condition: AvailableAWSRegion
     DependsOn: [ newvpc, securitygroups ]
@@ -358,7 +358,7 @@ Resources:
           !GetAtt [ securitygroups, Outputs.PublicAlbSecurityGroup ]
         Vpc:
           !GetAtt [ newvpc, Outputs.Vpc ]
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-03-publicalb.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-03-publicalb.yaml
   rds:
     Condition: AvailableAWSRegion
     DependsOn: [ newvpc, securitygroups ]
@@ -381,7 +381,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet1 ]
         DataSubnet2:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-03-rds.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-03-rds.yaml
   route53:
     Condition: AvailableAWSRegion
     Condition: CreateRecordSet
@@ -395,7 +395,7 @@ Resources:
           !If [ DeployCloudFront, 'Z2FDTNDATAQYW2', !GetAtt [ publicalb, Outputs.PublicAlbCanonicalHostedZoneId ] ]
         DomainName:
           !Ref DomainName
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-05-route53.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-05-route53.yaml
   securitygroups:
     Condition: AvailableAWSRegion
     DependsOn: newvpc
@@ -406,7 +406,7 @@ Resources:
           !Ref SshAccessCidr
         Vpc:
           !GetAtt [ newvpc, Outputs.Vpc ]
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-02-securitygroups.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-02-securitygroups.yaml
   web:
     Condition: AvailableAWSRegion
     DependsOn: [ efs, newvpc, publicalb, securitygroups ]
@@ -459,7 +459,7 @@ Resources:
           !Ref Locale
         Title:
           !Ref Title
-      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/Drupal/latest/templates/aws-refarch-Drupal-04-web.yaml
+      TemplateURL: https://s3.amazonaws.com/aws-us-east-1/reference-architecture/drupal/latest/templates/aws-refarch-drupal-04-web.yaml
 
 Outputs:
 
@@ -468,7 +468,7 @@ Outputs:
     Value: !If [ AvailableAWSRegion, !Join [ '', [ 'Stack created in an available region: ', !Ref 'AWS::Region' ] ], "!!ERROR!!! - Nothing to do! - unavailable AWS Region. You must create this stack in an available AWS Region: 'us-east-1', 'us-east-2', 'us-west-2', 'eu-west-1', 'ap-southeast-2'." ]
   SiteUrl:
     Description: The URL of the Drupal site
-    Value: !If [ CreateRecordSet, !Join [ '', [ 'http://www.', !Ref DomainName ] ], !If [ DeployCloudFront, !GetAtt [ cloudfront, Outputs.DnsHostname ], !GetAtt [ publicalb, Outputs.PublicAlbHostname ] ] ]
+    Value: !Join [ '', [ !If [ CreateRecordSet, !Join [ '', [ 'http://www.', !Ref DomainName ] ], !If [ DeployCloudFront, !GetAtt [ cloudfront, Outputs.DnsHostname ], !GetAtt [ publicalb, Outputs.PublicAlbHostname ] ] ], '/drupal' ] ]
   OpCacheValidationUrl:
     Description: A page to validate OpCache has been enabled for each instance in the ASG. Refresh the page to see the status of each instance in the ASG.
     Value: !Join [ '', [ !If [ CreateRecordSet, !Join [ '', [ 'http://www.', !Ref DomainName ] ], !If [ DeployCloudFront, !GetAtt [ cloudfront, Outputs.DnsHostname ], !GetAtt [ publicalb, Outputs.PublicAlbHostname ] ] ], '/opcache-instanceid.php' ] ]
